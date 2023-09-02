@@ -3,13 +3,13 @@ from tkinter import messagebox
 import os
 import re
 import yt_dlp
-
+from colorama import Fore as F, Back as B
 
 def is_valid_youtube_url(url):
     youtube_regex = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
     return re.match(youtube_regex, url)
 
-def download_best_audio(url, audio_name):
+def download_best_audio(url, path):
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -17,18 +17,20 @@ def download_best_audio(url, audio_name):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'outtmpl': os.path.join('downloads', f'{audio_name}.%(ext)s'),
-        'quiet': True
+        'outtmpl': os.path.join(path, f'%(title)s.%(ext)s'),
+        'quiet': True,
+        'no_warnings': True
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-def download_best_combined(url, combined_name):
+def download_best_combined(url, path):
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',
-        'outtmpl': os.path.join('downloads', f'{combined_name}.%(ext)s'),
-        'quiet': True
+        'outtmpl': os.path.join(path, f'%(title)s.%(ext)s'),
+        'quiet': True,
+        'no_warnings': True
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -38,6 +40,7 @@ def find_file(download_folder, file_name):
     files_in_folder = os.listdir(download_folder)
     for file_ident in files_in_folder:
         name, ext = os.path.splitext(file_ident)
+        print(name, file_name, 'file_name')
         if file_name == name:
             return file_ident
 
@@ -57,17 +60,16 @@ def download_video():
         title = info['title']
         desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
         download_folder = os.path.join(desktop, 'downloads')
-        os.chdir(desktop)
 
         if selection == 'a':
-            audio_name = f'{title}-audio'
-            download_best_audio(url, audio_name)
-            file_name = find_file(audio_name, download_folder)
+            download_best_audio(url, download_folder)
+            print(f'{B.GREEN}Downloaded{B.BLACK}', title, download_folder)
+            file_name = find_file(download_folder, title)
             messagebox.showinfo("Success", f'Audio downloaded as {file_name}')
         else:
-            combined_name = f'{title}-combined'
-            download_best_combined(url, combined_name)
-            file_name = find_file(combined_name, download_folder)
+            download_best_combined(url, download_folder)
+            print(f'{B.GREEN}Downloaded{B.BLACK}', title, download_folder)
+            file_name = find_file(download_folder, title)
             messagebox.showinfo("Success", f'Video downloaded as {file_name}')
 
     except Exception as e:
