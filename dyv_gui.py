@@ -34,8 +34,7 @@ def download_best_combined(url, combined_name):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-def find_file(file_name):
-    download_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'downloads')
+def find_file(download_folder, file_name):
     files_in_folder = os.listdir(download_folder)
     for file_ident in files_in_folder:
         name, ext = os.path.splitext(file_ident)
@@ -56,17 +55,20 @@ def download_video():
     try:
         info = yt_dlp.YoutubeDL().extract_info(url, download=False)
         title = info['title']
+        desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
+        download_folder = os.path.join(desktop, 'downloads')
+        os.chdir(desktop)
 
         if selection == 'a':
             audio_name = f'{title}-audio'
             download_best_audio(url, audio_name)
-            file_name = find_file(audio_name)
+            file_name = find_file(audio_name, download_folder)
             messagebox.showinfo("Success", f'Audio downloaded as {file_name}')
         else:
             combined_name = f'{title}-combined'
             download_best_combined(url, combined_name)
-            file_name = find_file(combined_name)
-            messagebox.showinfo("Success", f'Video with audio downloaded as {file_name}')
+            file_name = find_file(combined_name, download_folder)
+            messagebox.showinfo("Success", f'Video downloaded as {file_name}')
 
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
