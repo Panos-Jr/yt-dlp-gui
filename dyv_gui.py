@@ -115,7 +115,7 @@ input_frame = Frame(root)
 input_frame.pack(pady=20)
 
 url_label = Label(input_frame, text="Enter YouTube URL:")
-url_label.grid(row=0, column=0)
+url_label.grid(row=0, column=0, padx=10, pady=5)
 
 url_entry = Entry(input_frame, width=40)
 url_entry.grid(row=0, column=1)
