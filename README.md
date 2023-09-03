@@ -10,5 +10,6 @@ The application is simple, for an average user to download a youtube video, eith
 
 ## UI image
 
-![image](https://github.com/Panos-Jr/yt-dlp-gui/assets/84411578/6e48c94b-4f7a-4ca4-8bb8-6c47d0cb9415)
+![image](https://github.com/Panos-Jr/yt-dlp-gui/assets/84411578/64a4d27c-95db-4671-b33a-c6765ae7ddb6)
+
 
