@@ -11,29 +11,46 @@ def is_valid_youtube_url(url):
     return re.match(youtube_regex, url)
 
 def progress_hook(d):
-    global status
+    global status, status_label
     status = None
+
     if d['status'] == 'downloading':
+        total_bytes = d.get('total_bytes', 0)
+        downloaded_bytes = d.get('downloaded_bytes', 0)
+
         if 'fragment_index' in d and d['fragment_index'] > 0:
             progress = math.floor(int(d["fragment_index"])/int(d["fragment_count"])*100)
             status = f'Downloading {d["fragment_index"]}/{d["fragment_count"]} ({progress}%)'
             progress_bar_var.set(progress)
+
+        if total_bytes > 0:
+            progress = math.floor(int(downloaded_bytes)/int(total_bytes)*100)
+            status = f'Downloading ({progress}%)'
+            progress_bar_var.set(progress)
+
     elif d['status'] == 'finished':
         status = 'Download completed'
     else:
         status = d['status']
+
     status_label.config(text=status)
     root.update()
 
 def find_file(download_folder, file_name):
-    files_in_folder = os.listdir(download_folder)
-    for file_ident in files_in_folder:
-        name, ext = os.path.splitext(file_ident)
-        if file_name == name:
-            return file_ident
+    return next((file_ident for file_ident in os.listdir(download_folder) if file_name == os.path.splitext(file_ident)[0]), None)
+
+def update_status_labels():
+    global status_progress_frame
+    download_status_label = Label(status_progress_frame, text="", font=("Helvetica", 12))
+    download_status_label.grid(row=0, column=0, columnspan=2, pady=(10,5))
+    status_label = Label(status_progress_frame, text="", font=("Helvetica", 12))
+    status_label.grid(row=1, column=0, columnspan=2, pady=(10, 5))
+    return download_status_label, status_label
 
 def download_media(url, selection):
+    global status_label, progress_bar, progress_bar_var, status_progress_frame
     try:
+        download_status_label, status_label = update_status_labels()
         download_status_label.config(text=f'Starting download...')
         info = yt_dlp.YoutubeDL().extract_info(url, download=False)
         title = info['title']
@@ -46,8 +63,6 @@ def download_media(url, selection):
             download_status_label.destroy()
             messagebox.showinfo("File already exists", f'You\'ve already downloaded this.')
             return
-        
-        progress_bar.grid()
         
         ydl_opts = {
             'format': 'bestaudio/best' if selection == 'a' else 'bestvideo+bestaudio/best',
@@ -64,6 +79,9 @@ def download_media(url, selection):
         
         ydl = yt_dlp.YoutubeDL(ydl_opts)
         download_status_label.destroy()
+        progress_bar_var = DoubleVar()
+        progress_bar = ttk.Progressbar(status_progress_frame, orient=HORIZONTAL, length=300, mode="determinate", variable=progress_bar_var)
+        progress_bar.grid()
         ydl.download([url])
         
         if selection == 'a':
@@ -126,14 +144,5 @@ download_button.grid(row=2, columnspan=2, pady=10)
 
 status_progress_frame = Frame(root)
 status_progress_frame.pack(pady=10)
-
-status_label = Label(status_progress_frame, text="", font=("Helvetica", 12))
-status_label.grid(row=1, column=0, columnspan=2, pady=(10, 5))
-
-download_status_label = Label(status_progress_frame, text="", font=("Helvetica", 12))
-download_status_label.grid(row=0, column=0, columnspan=2, pady=(10,5))
-
-progress_bar_var = DoubleVar()
-progress_bar = ttk.Progressbar(status_progress_frame, orient=HORIZONTAL, length=300, mode="determinate", variable=progress_bar_var)
 
 root.mainloop()
