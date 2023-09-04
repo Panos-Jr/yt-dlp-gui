@@ -6,7 +6,7 @@ You can download the GUI yt-dlp application here:
 <a href='https://github.com/Panos-Jr/yt-dlp-gui/raw/main/dyv_gui.exe'>dyv_gui.exe</a>
 
 ## Functionality
-The application is simple, for an average user to download a youtube video, either audio or video (to clarify, the video will have audio), in a folder (which will be created automatically) `downloads`. For now, the interface is being developed, with more necessary functionality being added.
+The application is simple, for an average user to download a youtube video, either the audio or video (to clarify, the video will have audio), in a folder (which will be created automatically) in your Desktop, called `downloads`. For now, the interface is being developed, with more necessary functionality being added.
 
 ## UI image
 
