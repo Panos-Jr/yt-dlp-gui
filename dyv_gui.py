@@ -50,14 +50,16 @@ def update_status_labels():
 def download_media(url, selection):
     global status_label, progress_bar, progress_bar_var, status_progress_frame
     try:
+        progress_bar = None
         download_status_label, status_label = update_status_labels()
         download_status_label.config(text=f'Starting download...')
         info = yt_dlp.YoutubeDL().extract_info(url, download=False)
         title = info['title']
         desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
         download_folder = os.path.join(desktop, 'downloads')
+        title += '-audio' if selection == 'a' else '-video'
         file_name = find_file(download_folder, title)
-        
+
         if file_name:
             enable_download_button()
             download_status_label.destroy()
@@ -72,7 +74,7 @@ def download_media(url, selection):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }] if selection == 'a' else [],
-            'outtmpl': os.path.join(download_folder, f'%(title)s.%(ext)s'),
+            'outtmpl': os.path.join(download_folder, f'{title}.%(ext)s'),
             'quiet': True,
             'no_warnings': True
         }
@@ -92,7 +94,8 @@ def download_media(url, selection):
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
     finally:
-        progress_bar.grid_remove()
+        if progress_bar:
+            progress_bar.grid_remove()
         status_label.destroy()
         enable_download_button()
 
@@ -127,10 +130,10 @@ input_frame = Frame(root)
 input_frame.pack(pady=20)
 
 url_label = Label(input_frame, text="Enter YouTube URL:")
-url_label.grid(row=0, column=0, padx=10, pady=5)
+url_label.grid(row=0, column=0, pady=5)
 
 url_entry = Entry(input_frame, width=40)
-url_entry.grid(row=0, column=1)
+url_entry.grid(row=0, column=1, padx=12)
 
 selection_var = StringVar()
 selection_var.set('a')
