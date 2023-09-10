@@ -89,10 +89,10 @@ def update_status_labels():
     return download_status_label, status_label
 
 def download_media(url, selection):
-    global status_label, progress_bar, status_progress_frame, update_status_label, my_menu
+    global progress_bar, my_menu, progress_bar_var, status_label
     try:
         progress_bar = None
-        my_menu.configure(state="disabled")
+        my_menu.entryconfigure("Tasks", state="disabled")
         download_status_label, status_label = update_status_labels()
         update_status_label.config(text='')
         download_status_label.config(text=f'Starting download...')
@@ -139,6 +139,7 @@ def download_media(url, selection):
     finally:
         if progress_bar:
             progress_bar.grid_remove()
+        my_menu.entryconfigure("Tasks", state="normal")
         status_label.destroy()
         enable_download_button()
 
