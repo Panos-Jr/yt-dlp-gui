@@ -5,13 +5,15 @@ import re
 import yt_dlp
 import threading
 import math
+import requests
+import urllib.request
 
 def is_valid_youtube_url(url):
     youtube_regex = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
     return re.match(youtube_regex, url)
 
 def progress_hook(d):
-    global status, status_label
+    global status, status_label, progress_bar_var
     status = None
 
     if d['status'] == 'downloading':
@@ -39,6 +41,46 @@ def progress_hook(d):
 def find_file(download_folder, file_name):
     return next((file_ident for file_ident in os.listdir(download_folder) if file_name == os.path.splitext(file_ident)[0]), None)
 
+def start_update(version):
+
+    url = 'https://raw.githubusercontent.com/Panos-Jr/yt-dlp-gui/main/download_release.txt'
+    response = requests.get(url)
+        
+    if response.status_code == 200:
+        file_url = response.text
+        file_name = 'dyv_gui-' + version + '.exe'
+        desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
+        local_path = os.path.join(desktop, file_name)
+        
+
+        try:
+            urllib.request.urlretrieve(file_url, local_path)
+            messagebox.showinfo("Success", f'Update downloaded to \'Desktop\'')
+        except:
+            messagebox.showerror("Error", f"An error occurred while downloading the file.")
+    else:
+        messagebox.showerror("Error", f"An error occurred while downloading the file.")
+
+def check_for_updates():
+    global update_status_label
+    try:
+        current_version = 'v1.0'
+        url = 'https://raw.githubusercontent.com/Panos-Jr/yt-dlp-gui/main/version.txt'
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            latest_version = response.text.strip()
+            if latest_version == current_version:
+                update_status_label.config(text='No update available')
+            else:
+                update_status_label.config(text='Update found!')
+                start_update(latest_version)
+        else:
+            update_status_label.config(text='Failed to check for updates')
+
+    except Exception as e:
+        update_status_label.config(text='Error checking for updates')
+
 def update_status_labels():
     global status_progress_frame
     download_status_label = Label(status_progress_frame, text="", font=("Helvetica", 12))
@@ -48,10 +90,12 @@ def update_status_labels():
     return download_status_label, status_label
 
 def download_media(url, selection):
-    global status_label, progress_bar, progress_bar_var, status_progress_frame
+    global status_label, progress_bar, status_progress_frame, update_status_label, my_menu
     try:
         progress_bar = None
+        my_menu.configure(state="disabled")
         download_status_label, status_label = update_status_labels()
+        update_status_label.config(text='')
         download_status_label.config(text=f'Starting download...')
         info = yt_dlp.YoutubeDL().extract_info(url, download=False)
         title = info['title']
@@ -127,13 +171,23 @@ root.geometry("400x300")
 root.resizable(False, False)
 
 input_frame = Frame(root)
-input_frame.pack(pady=20)
+input_frame.grid(row=0, column=0, padx=10, pady=20)  # Use grid
 
 url_label = Label(input_frame, text="Enter YouTube URL:")
 url_label.grid(row=0, column=0, pady=5)
 
 url_entry = Entry(input_frame, width=40)
 url_entry.grid(row=0, column=1, padx=12)
+
+# Create a menu
+my_menu = Menu(root)
+root.config(menu=my_menu)
+
+# Create a "Tasks" menu
+tasks_menu = Menu(my_menu, tearoff="off")
+my_menu.add_cascade(label="Tasks", menu=tasks_menu)
+# update_thread = threading.Thread(target=check_for_updates)
+tasks_menu.add_command(label='Check for updates', command=check_for_updates)
 
 selection_var = StringVar()
 selection_var.set('a')
@@ -145,7 +199,15 @@ video_radio.grid(row=1, column=1)
 download_button = Button(input_frame, text="Download", command=download_video)
 download_button.grid(row=2, columnspan=2, pady=10)
 
+# Create a frame for status and progress
 status_progress_frame = Frame(root)
-status_progress_frame.pack(pady=10)
+status_progress_frame.grid(row=1, column=0, padx=10)  # Use grid
+
+# Create a frame for update status
+updates_frame = Frame(root)
+updates_frame.grid(row=3, column=0, columnspan=2, pady=10)  # Use grid
+
+update_status_label = Label(updates_frame, text="", font=("Helvetica", 12))
+update_status_label.grid(pady=10)  # Use grid
 
 root.mainloop()
