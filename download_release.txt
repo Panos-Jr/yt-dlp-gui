@@ -1,1 +1,1 @@
-https://github.com/Panos-Jr/yt-dlp-gui/releases/download/v1.1-stable/dyv_gui-v1.1.exe
+https://github.com/Panos-Jr/yt-dlp-gui/releases/download/v1.2-stable/dyv_gui-v1.2.exe
