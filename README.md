@@ -9,7 +9,7 @@ You can download the GUI yt-dlp application from the `Releases`:
 <a href='https://www.ffmpeg.org'>FFmpeg</a> is required
 
 ## Functionality
-The application is simple, for an average user to download a youtube video, either the audio or video (to clarify, the video will have audio), in a folder (which will be created automatically) in your Desktop, called `downloads`. For now, the interface is being developed, with more necessary functionality being added.
+The application is simple, for an average user to download a youtube video, either the audio or video (to clarify, the video will have audio), in a folder (which will be created automatically) in your Desktop directory, called `downloads`. For now, the interface is being developed, with more necessary functionality being added.
 
 ## UI image
 
