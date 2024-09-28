@@ -1,5 +1,5 @@
 # yt-dlp-gui
-Simple GUI application of yt-dlp (yt-dlp is `a youtube-dl fork with additional features and fixes` <a href='https://github.com/yt-dlp/yt-dlp'>GitHub repository here</a>) with a basic user interface for selecting audio or video download.
+Simple GUI application using the yt-dlp library in Python (yt-dlp is `a youtube-dl fork with additional features and fixes` <a href='https://github.com/yt-dlp/yt-dlp'>GitHub repository here</a>) with a basic user interface for selecting audio or video download.
 
 ## Download
 You can download the GUI yt-dlp application from the `Releases`:
