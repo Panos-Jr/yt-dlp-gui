@@ -236,7 +236,7 @@ def download_video():
     download_thread.start()
 
 app = customtkinter.CTk()
-app.title('YouTube Downloader')
+app.title('dyv_gui v1.3')
 app.geometry('400x300')
 app.resizable(False, False)
 
