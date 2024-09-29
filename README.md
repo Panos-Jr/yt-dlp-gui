@@ -5,7 +5,7 @@ Simple GUI application using the yt-dlp library in Python (yt-dlp is `a youtube-
 You can download it from `Releases`:
 <br> <a href='https://github.com/Panos-Jr/yt-dlp-gui/releases'>Check Releases</a> <br> (Windows only for now)
 
-## Requirements
+## Requirements (from v1.3)
 FFmpeg is required from v1.3, <a href='https://www.ffmpeg.org/'>FFmpeg</a>.
 
 ## Functionality
