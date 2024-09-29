@@ -16,7 +16,12 @@ import sys
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("dark-blue")
 
-
+progress_bar = None
+status = None
+status_label = None
+check_var = None
+update_checkbox = None
+count = 0
 env_path = os.path.join(os.environ['userprofile'], 'Documents', '.env')
 
 if not os.path.isfile(env_path):
@@ -24,6 +29,11 @@ if not os.path.isfile(env_path):
         f.write('CHECK_UPDATE=\'ON\'')
 load_dotenv(dotenv_path=env_path)
 
+def bottom_checkbox():
+    global update_checkbox, check_var
+    check_var = customtkinter.StringVar(value=os.environ['CHECK_UPDATE'])
+    update_checkbox = customtkinter.CTkCheckBox(master=input_frame, text='Check for updates', font=("Helvetica", 12), command=save_checkbox_value, variable=check_var, onvalue="ON", offvalue="OFF")
+    update_checkbox.grid(row=4, column=0, sticky="w")
 
 def save_checkbox_value():
     global check_var, bottom_checkbox, env_path
@@ -35,9 +45,19 @@ def is_valid_youtube_url(url):
     youtube_regex = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
     return re.match(youtube_regex, url)
 
+def init_progress_bar():
+    global progress_bar
+    progress_bar = customtkinter.CTkProgressBar(input_frame, orientation=HORIZONTAL, width=400, mode="determinate")
+    progress_bar.grid(row=3, column=0, padx=10, pady=10, columnspan=2, sticky="ew")
+    progress_bar.set(0)
+
 def progress_hook(d):
-    global status, status_label, progress_bar
-    status = None
+    global status, status_label, progress_bar, count
+
+    if not count:
+        init_progress_bar()
+        status_label.configure(text='')
+
 
     if d['status'] == 'downloading':
         total_bytes = d.get('total_bytes', 0)
@@ -46,11 +66,13 @@ def progress_hook(d):
         if 'fragment_index' in d and d['fragment_index'] > 0:
             progress = math.floor(int(d["fragment_index"])/int(d["fragment_count"])*100)
             status = f'Downloading {d["fragment_index"]}/{d["fragment_count"]} ({progress}%)'
+            count +=1
             progress_bar.set(progress/100)
 
         if total_bytes > 0:
             progress = math.floor(int(downloaded_bytes)/int(total_bytes)*100)
             status = f'Downloading ({progress}%)'
+            count +=1
             progress_bar.set(progress/100)
 
     elif d['status'] == 'finished':
@@ -65,7 +87,7 @@ def find_file(download_folder, file_name):
     return next((file_ident for file_ident in os.listdir(download_folder) if file_name == os.path.splitext(file_ident)[0]), None)
 
 def start_update(version):
-    global update_status_label
+    global check_update_label
     url = 'https://raw.githubusercontent.com/Panos-Jr/yt-dlp-gui/main/download_release.txt'
     response = requests.get(url)
         
@@ -84,7 +106,7 @@ def start_update(version):
 
 
 def check_for_updates():
-    global update_status_label
+    global check_update_label
     print('Checking for updates')
     try:
         current_version = 'v1.3'
@@ -96,15 +118,15 @@ def check_for_updates():
             if latest_version == current_version:
                 print('no updates')
                 messagebox.showinfo(title='No updates', message='No update was found.')
-                update_status_label.configure(text='')
+                check_update_label.configure(text='')
                 enable_download_button()
             else:
                 update = messagebox.askokcancel(title='Update Found!', message='We\'ve found a newer update, would you like to download it?')
                 if update:
-                    update_status_label.configure(text='Starting Update')
+                    check_update_label.configure(text='Starting Update')
                     start_update(latest_version)
                 enable_download_button()
-                update_status_label.configure(text='')
+                check_update_label.configure(text='')
         else:
             messagebox.showwarning(title='Checking for Updates', message='An error occured while checking for updates.')
 
@@ -112,10 +134,9 @@ def check_for_updates():
         messagebox.showwarning(title='Checking for Updates', message='An error occured while checking for updates.')
 
 def update_status_labels():
-    global input_frame
+    global input_frame, status_label
     status_label = customtkinter.CTkLabel(master=input_frame, text="", font=("Helvetica", 15))
     status_label.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
-    return status_label
 
 ILLEGAL_CHARACTERS = r'[\\/:*?"<>|{}$!\'"&%`@+=,;]'
 
@@ -144,9 +165,8 @@ def download_media(url, selection):
     global my_menu, progress_bar, status_label
     try:
         update_checkbox.grid_forget()
-        status_label = update_status_labels()
-        update_status_label.configure(text='')
-        status_label.configure(text=f'Starting download...')
+        update_status_labels()
+        status_label.configure(text='Starting download...')
         info = yt_dlp.YoutubeDL().extract_info(url, download=False)
         title = info['title']
         title += '-audio' if selection == 'a' else '-video'
@@ -161,6 +181,7 @@ def download_media(url, selection):
         
         if not save_path:
             enable_download_button()
+            status_label.configure(text='')
             messagebox.showinfo("Cancelled", "Download cancelled by user.")
             return
         
@@ -182,18 +203,15 @@ def download_media(url, selection):
             return
 
         ydl = yt_dlp.YoutubeDL(ydl_opts)
-        status_label.configure(text='')
-        progress_bar = customtkinter.CTkProgressBar(input_frame, orientation=HORIZONTAL, width=400, mode="determinate")
-        progress_bar.grid(row=3, column=0, padx=10, pady=10, columnspan=2, sticky="ew")
-        progress_bar.set(0)
+        
         ydl.download([url])
         
-        downloaded_file = find_downloaded_file(os.path.splitext(save_path)[0])
+        downloaded_file = find_downloaded_file(os.path.splitext(save_path)[0], title)
 
         user_chosen_extension = os.path.splitext(save_path)[1]
 
         if downloaded_file and downloaded_file != save_path:
-            messagebox.showinfo("Remuxing", f"Converting file to {user_chosen_extension}")
+            status_label.configure(f"Remuxing to {user_chosen_extension}")
             remux_to_target_format(downloaded_file, save_path)
         else:
             if downloaded_file and downloaded_file != save_path:
@@ -205,12 +223,12 @@ def download_media(url, selection):
         enable_download_button()
         bottom_checkbox()
     except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
+        messagebox.showerror("Error", f"An download error occurred: {e}")
             
-def find_downloaded_file(base_name):
-    for ext in ['.mp4', '.mkv', '.webm']:
-        if os.path.exists(base_name + ext):
-            return base_name + ext
+def find_downloaded_file(base_name, filename):
+    for files in os.listdir(base_name):
+        if os.path.splitext(files)[0] == filename:
+            return base_name + os.path.splitext(files)[1]
     return None
 
 def disable_download_button():
@@ -264,14 +282,8 @@ video_radio.grid(row=1, column=1, padx=35, pady=5, sticky="w")
 download_button = customtkinter.CTkButton(master=input_frame, text="Download", font=('', 15), command=download_video)
 download_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
-update_status_label = customtkinter.CTkLabel(master=input_frame, text='', font=('Helvetica', 12), fg_color='transparent', text_color=('#ffffff'))
-update_status_label.grid(row=3, column=0, columnspan=2, pady=10, sticky="ew")
-
-def bottom_checkbox():
-    global update_checkbox, check_var
-    check_var = customtkinter.StringVar(value=os.environ['CHECK_UPDATE'])
-    update_checkbox = customtkinter.CTkCheckBox(master=input_frame, text='Check for updates', font=("Helvetica", 12), command=save_checkbox_value, variable=check_var, onvalue="ON", offvalue="OFF")
-    update_checkbox.grid(row=4, column=0, sticky="w")
+check_update_label = customtkinter.CTkLabel(master=input_frame, text='', font=('Helvetica', 12), fg_color='transparent', text_color=('#ffffff'))
+check_update_label.grid(row=3, column=0, columnspan=2, pady=10, sticky="ew")
 
 bottom_checkbox()
 
@@ -280,7 +292,7 @@ app.grid_rowconfigure(0, weight=1)
 
 if update_checkbox.get() == 'ON':
     disable_download_button()
-    update_status_label.configure(text='Checking for updates...', font=('', 15))
+    check_update_label.configure(text='Checking for updates...', font=('', 15))
     app.after(100, lambda: check_for_updates())
 
 app.mainloop()
