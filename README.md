@@ -13,9 +13,4 @@ The application is simple, for an average user to download a youtube video, eith
 
 ## UI image
 
-![python_XFOGAJb7cv](https://github.com/user-attachments/assets/d60ad101-c69e-4036-a412-c357bec34144)
-
-
-
-
-
+![python_rYdx9vc1uo](https://github.com/user-attachments/assets/9be33dc8-8c63-489f-93d8-d40c84928e1e)
