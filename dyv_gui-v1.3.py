@@ -2,7 +2,6 @@ import customtkinter
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk, messagebox
-import subprocess
 import os
 import re
 import yt_dlp
@@ -12,6 +11,7 @@ import requests
 import urllib.request
 from dotenv import *
 import sys
+import ffmpeg
 
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -151,19 +151,19 @@ def sanitize_filename(filename):
 
 def remux_to_target_format(input_file, output_file):
     try:
-        subprocess.run(
-            ['ffmpeg', '-i', input_file, '-c', 'copy', output_file],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+        (
+            ffmpeg.input(input_file)
+            .output(output_file)
+            .run()
         )
         os.remove(input_file)
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         messagebox.showerror("Remuxing Error", f"Failed to remux the file: {e}")
 
 def download_media(url, selection):
-    global my_menu, progress_bar, status_label
+    global my_menu, progress_bar, status_label, count
     try:
+        count = 0
         update_checkbox.grid_forget()
         update_status_labels()
         status_label.configure(text='Starting download...')
@@ -178,7 +178,7 @@ def download_media(url, selection):
         save_path = filedialog.asksaveasfilename(defaultextension=file_extension, 
                                                  filetypes=file_types, 
                                                  initialfile=title)
-        
+        print(save_path)
         if not save_path:
             enable_download_button()
             status_label.configure(text='')
@@ -190,7 +190,6 @@ def download_media(url, selection):
             'progress_hooks': [progress_hook],
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }] if selection == 'a' else [],
             'outtmpl': os.path.splitext(save_path)[0] + '.%(ext)s',
@@ -198,6 +197,7 @@ def download_media(url, selection):
             'no_warnings': True
         }
         
+
         if os.path.isfile(save_path):
             status_label.configure(text='File already exists.')
             return
@@ -206,18 +206,17 @@ def download_media(url, selection):
         
         ydl.download([url])
         
-        downloaded_file = find_downloaded_file(os.path.splitext(save_path)[0], title)
+        downloaded_file = find_downloaded_file(save_path)
+        
+        print('we got it', downloaded_file)
 
         user_chosen_extension = os.path.splitext(save_path)[1]
 
-        if downloaded_file and downloaded_file != save_path:
-            status_label.configure(f"Remuxing to {user_chosen_extension}")
+        if downloaded_file:
+            status_label.configure(text=f"Remuxing to {user_chosen_extension}")
             remux_to_target_format(downloaded_file, save_path)
-        else:
-            if downloaded_file and downloaded_file != save_path:
-                os.rename(downloaded_file, save_path)
 
-        messagebox.showinfo("Success", f'File saved to {save_path}')
+        messagebox.showinfo("Success", f'File saved to {os.path.dirname(save_path)} as {os.path.basename(save_path).split('/')[-1]}')
         progress_bar.grid_remove()
         status_label.destroy()
         enable_download_button()
@@ -225,11 +224,13 @@ def download_media(url, selection):
     except Exception as e:
         messagebox.showerror("Error", f"An download error occurred: {e}")
             
-def find_downloaded_file(base_name, filename):
-    for files in os.listdir(base_name):
-        if os.path.splitext(files)[0] == filename:
-            return base_name + os.path.splitext(files)[1]
-    return None
+def find_downloaded_file(base_name):
+    folder = os.path.dirname(base_name)
+    for files in os.listdir(folder):
+        if os.path.join(folder, files) == base_name:
+            return None
+        if os.path.splitext(files)[0] == os.path.splitext(os.path.basename(base_name).split('/')[-1])[0]:
+            return os.path.join(folder, files)
 
 def disable_download_button():
     download_button.configure(state="disabled")
