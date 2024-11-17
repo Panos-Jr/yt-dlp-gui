@@ -42,7 +42,7 @@ def save_checkbox_value():
         check_for_updates()
 
 def is_valid_youtube_url(url):
-    youtube_regex = r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$'
+    youtube_regex = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/((watch\?v=|embed/|v/|shorts/|playlist\?list=)?[A-Za-z0-9_-]+)(\?.*)?$'
     return re.match(youtube_regex, url)
 
 def init_progress_bar():
@@ -57,7 +57,6 @@ def progress_hook(d):
     if not count:
         init_progress_bar()
         status_label.configure(text='')
-
 
     if d['status'] == 'downloading':
         total_bytes = d.get('total_bytes', 0)
@@ -178,7 +177,6 @@ def download_media(url, selection):
         save_path = filedialog.asksaveasfilename(defaultextension=file_extension, 
                                                  filetypes=file_types, 
                                                  initialfile=title)
-        print(save_path)
         if not save_path:
             enable_download_button()
             status_label.configure(text='')
@@ -200,6 +198,7 @@ def download_media(url, selection):
 
         if os.path.isfile(save_path):
             status_label.configure(text='File already exists.')
+            enable_download_button()
             return
 
         ydl = yt_dlp.YoutubeDL(ydl_opts)
@@ -207,8 +206,6 @@ def download_media(url, selection):
         ydl.download([url])
         
         downloaded_file = find_downloaded_file(save_path)
-        
-        print('we got it', downloaded_file)
 
         user_chosen_extension = os.path.splitext(save_path)[1]
 
