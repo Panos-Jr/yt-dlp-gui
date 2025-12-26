@@ -4,8 +4,7 @@ import ffmpeg
 
 class Downloader:
     def __init__(self):
-        self.status = ''
-        self.count = 0
+        pass
 
     def remux_to_target_format(self, input_file, output_file):
         try:
