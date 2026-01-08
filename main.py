@@ -136,7 +136,7 @@ class AppGUI(ctk.CTk):
 
     def check_for_updates(self):
         try:
-            current_version = 'v1.3'
+            current_version = 'v1.4'
             url = 'https://raw.githubusercontent.com/Panos-Jr/yt-dlp-gui/main/version.txt'
             response = requests.get(url)
             
