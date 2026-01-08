@@ -18,7 +18,6 @@ class Downloader:
             print(f"Remuxing failed: {e}")
 
     def download(self, url, selection, save_path, extension, progress_hook=None):
-        print('save path', save_path)
         file_container = extension.lstrip('.')
         ydl_opts = {
             'format': f'bestaudio[ext={file_container}]/best' if selection == 'a' else f'bestvideo[ext={file_container}]+bestaudio/best[ext=mp4]/best',
@@ -47,10 +46,8 @@ class Downloader:
                 ydl.download([url])
 
             download_dir = os.listdir(os.path.dirname(save_path))
-            print('download dir', download_dir)
             for file in download_dir:
                 if os.path.splitext(os.path.basename(save_path))[0] in file and not extension in os.path.splitext(file)[1]:
                     input_file = os.path.join(os.path.dirname(save_path), file)
-                    print('remuxing', input_file, 'to', save_path)
                     self.remux_to_target_format(input_file, save_path)
                     break
