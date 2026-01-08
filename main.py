@@ -46,7 +46,7 @@ class AppGUI(ctk.CTk):
         ctk.CTkRadioButton(master=self.input_frame, text="Video", variable=self.selection_var, value="v") \
             .grid(row=1, column=1, padx=35, pady=5, sticky="w")
 
-        self.download_button = ctk.CTkButton(master=self.input_frame, text="Download", font=('', 15), command=self.download_video)
+        self.download_button = ctk.CTkButton(master=self.input_frame, text="Download", font=('', 15), command=lambda: threading.Thread(target=self.download_video).start())
         self.download_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
 
@@ -72,6 +72,7 @@ class AppGUI(ctk.CTk):
             self.check_update_label.configure(text=d['status'])
 
     def download_video(self):
+        print("Download button clicked")
         url = self.url_entry.get()
         selection = self.selection_var.get()
 
@@ -90,7 +91,6 @@ class AppGUI(ctk.CTk):
         save_path = filedialog.asksaveasfilename(defaultextension=file_extension, 
                                                  filetypes=file_types, 
                                                  initialfile=sanitize_filename(info['title']))
-
         if not save_path:
             return
 
