@@ -17,7 +17,7 @@ class AppGUI(ctk.CTk):
         ctk.set_appearance_mode("Dark")
         ctk.set_default_color_theme("dark-blue")
 
-        self.title('dyv_gui v1.3')
+        self.title('dyv_gui v1.4')
         self.geometry('400x300')
 
         self.downloader = Downloader()
